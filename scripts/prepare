@@ -1,0 +1,225 @@
+#!/bin/bash
+
+set -eu -o pipefail
+
+# Update the system
+sudo apt -y update
+
+# Install new packages (xclip is used by micro)
+sudo apt install -y python3-pip git xclip upx-ucl initramfs-tools virtualbox-guest-utils
+
+# Install micro from Github
+sudo wget https://github.com/zyedidia/micro/releases/download/v2.0.8/micro-2.0.8-linux64-static.tar.gz
+sudo tar -xvf micro-*.tar.gz
+sudo rm micro-*.tar.gz
+sudo mv micro-*/micro /usr/bin
+
+# Compress larger bins
+sudo upx -9 /usr/bin/micro
+
+# Remove extra packages
+sudo apt -y --purge remove \
+"^alsa.*" \
+anacron \
+"^avahi.*" \
+acl \
+acpid \
+alsa-utils \
+apparmor \
+apport \
+appstream \
+app-install-data-partner \
+apt-utils \
+aspell \
+"^busybox.*" \
+bc \
+bluez \
+brltty \
+build-essential \
+cron \
+"^cups.*" \
+ed \
+eject \
+enchant-2 \
+eog \
+evince \
+file \
+"^fonts-lohit-.*" \
+"^fonts-noto.*" \
+"^fonts-samyak.*" \
+"^fonts-smc.*" \
+"^fonts-tlwg-.*" \
+fonts-freefont-ttf \
+fonts-guru \
+fonts-guru-extra \
+fonts-kacst \
+fonts-kacst-one \
+fonts-khmeros-core \
+fonts-lao \
+fonts-liberation2 \
+fonts-lklug-sinhala \
+fonts-lohit-guru \
+fonts-nakula \
+fonts-nanum \
+fonts-navilu \
+fonts-noto-cjk \
+fonts-opensymbol \
+fonts-orya \
+fonts-pagul \
+fonts-sarai \
+fonts-sil-abyssinica \
+fonts-sil-padauk \
+fonts-takao-pgothic \
+fonts-taml \
+fonts-telu \
+fonts-tibetan-machine \
+fonts-urw-base35 \
+foomatic-db-compressed-ppds \
+fprintd \
+fuse \
+gamemode \
+gdb \
+gedit \
+genisoimage \
+ghostscript \
+gnome-accessibility-themes \
+gnome-bluetooth \
+gnome-calculator \
+gnome-characters \
+gnome-disk-utility \
+gnome-font-viewer \
+gnome-getting-started-docs \
+gnome-initial-setup \
+gnome-keyring-pkcs11 \
+gnome-logs \
+gnome-menus \
+gnome-online-accounts \
+gnome-power-manager \
+gnome-session-canberra \
+gnome-shell-extension-appindicator \
+gnome-startup-applications \
+gnome-system-monitor \
+gnome-themes-extra \
+gnome-themes-extra-data \
+gpg \
+gpg-agent \
+gstreamer1.0-alsa \
+gstreamer1.0-gl \
+gstreamer1.0-pulseaudio \
+gstreamer1.0-tools \
+gstreamer1.0-plugins-good \
+hdparm \
+humanity-icon-theme \
+"^ibus.*" \
+info \
+initramfs-tools \
+iptables \
+irqbalance \
+kerneloops \
+language-selector-common \
+language-selector-gnome \
+libllvm9 \
+libgnome-menu-3-0 \
+libproxy1-plugin-networkmanager \
+linux-sound-base \
+locales \
+logrotate \
+lshw \
+ltrace \
+memtest86+ \
+micro \
+mobile-broadband-provider-info \
+modemmanager \
+mousetweaks \
+mtr-tiny \
+nautilus-sendto \
+netbase \
+netplan.io \
+networkd-dispatcher \
+network-manager-config-connectivity-ubuntu \
+network-manager-gnome \
+network-manager \
+ntfs-3g \
+openprinting-ppds \
+openvpn \
+os-prober \
+"^printer-driver.*" \
+packagekit \
+pcmciautils \
+plymouth \
+poppler-data \
+poppler-utils \
+popularity-contest \
+powermgmt-base \
+ppp \
+psmisc \
+publicsuffix \
+pulseaudio \
+python3-cairo \
+rfkill \
+rsync \
+rsyslog \
+rygel \
+snapd \
+speech-dispatcher \
+squashfs-tools \
+strace \
+switcheroo-control \
+system-config-printer-udev \
+tcpdump \
+ubuntu-advantage-tools \
+ubuntu-docs \
+ubuntu-report \
+ufw \
+unattended-upgrades \
+update-inetd \
+update-manager \
+update-manager-core \
+update-notifier \
+upx-ucl \
+usb-modeswitch \
+usbmuxd \
+usbutils \
+vim-tiny \
+wamerican \
+wbritish \
+whiptail \
+wireless-tools \
+whoopsie \
+wpasupplicant \
+xcursor-themes \
+xdg-user-dirs \
+xdg-utils \
+xfonts-encodings \
+xorg-docs-core \
+xserver-xephyr \
+xserver-xorg-input-wacom \
+xserver-xorg-legacy \
+xserver-xorg-video-all \
+xul-ext-ubufox \
+yaru-theme-icon \
+yaru-theme-sound \
+yelp
+
+# Add basic networking
+sudo apt -y install ifupdown
+# Show boot messages instead of splash screen
+echo 'GRUB_CMDLINE_LINUX_DEFAULT=""' | sudo tee -a /etc/default/grub
+# Use old standard names for interfaces (e.g eth0)
+echo 'GRUB_CMDLINE_LINUX=" net.ifnames=0 biosdevname=0"' | sudo tee -a /etc/default/grub
+sudo update-grub
+echo allow-hotplug eth0 | sudo tee /etc/network/interfaces
+echo iface eth0 inet dhcp | sudo tee -a /etc/network/interfaces
+
+# Add just make and gcc
+sudo apt -y install make gcc
+
+# Remove dependencies
+sudo apt -y --purge autoremove
+
+# Upgrade the system
+sudo apt -y upgrade
+
+./trim-kernel
+
+./trim-system
